@@ -10,7 +10,7 @@ public class Main {
         PasswordGenerator gen = new PasswordGenerator();
         String password = gen.generatePassword(config);
         System.out.println(password);
-        
+
     }
 
 }
