@@ -1,16 +1,19 @@
 package app;
 
-import logic.PasswordGenerator;
-import model.PasswordConfig;
+import gui.MainFrame;
+import java.awt.Dimension;
+import javax.swing.SwingUtilities;
 
 public class Main {
 
     public static void main(String[] args) {
-        PasswordConfig config = new PasswordConfig(17, true, true, false, true);
-        PasswordGenerator gen = new PasswordGenerator();
-        String password = gen.generatePassword(config);
-        System.out.println(password);
-
+        SwingUtilities.invokeLater(() -> {
+            MainFrame frame = new MainFrame();
+            frame.pack();
+            frame.setSize(new Dimension(450, 200));
+            frame.setLocationRelativeTo(null);
+            frame.setVisible(true);
+        });
     }
 
 }

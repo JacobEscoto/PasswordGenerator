@@ -1,5 +1,7 @@
 package gui;
 
+import gui.components.ColorTickIcon;
+import gui.components.Slider;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -13,6 +15,7 @@ import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
+import model.PasswordConfig;
 
 public class ConfigPanel extends JPanel {
 
@@ -27,9 +30,11 @@ public class ConfigPanel extends JPanel {
     private JCheckBox numberCheckBox;
     private JCheckBox symbolsCheckBox;
     private JLabel lengthLabel;
+    private final MainFrame parent;
     private Slider slider;
 
-    public ConfigPanel() {
+    public ConfigPanel(MainFrame parent) {
+        this.parent = parent;
         initComponents();
     }
 
@@ -64,9 +69,10 @@ public class ConfigPanel extends JPanel {
 
         slider = new Slider(1, 50, 10);
         slider.setMaximumSize(new Dimension(300, ROW_HEIGHT));
-        slider.addChangeListener(e
-                -> lengthLabel.setText(String.valueOf(slider.getValue()))
-        );
+        slider.addChangeListener(e -> { 
+            lengthLabel.setText(String.valueOf(slider.getValue()));
+            autoGenerate();
+        });
 
         row.add(lengthLabel);
         row.add(Box.createHorizontalStrut(GAP));
@@ -74,7 +80,7 @@ public class ConfigPanel extends JPanel {
 
         return row;
     }
-    
+
     private JComponent createOptionsRow() {
         JPanel row = createRowPanel();
 
@@ -93,7 +99,7 @@ public class ConfigPanel extends JPanel {
 
         return row;
     }
-    
+
     private JPanel createRowPanel() {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
@@ -102,7 +108,7 @@ public class ConfigPanel extends JPanel {
         panel.setMaximumSize(new Dimension(MAX_WIDTH, ROW_HEIGHT));
         return panel;
     }
-    
+
     private JCheckBox createCheckBox(String text) {
         JCheckBox cb = new JCheckBox(text);
         cb.setOpaque(false);
@@ -116,7 +122,29 @@ public class ConfigPanel extends JPanel {
         cb.setForeground(TEXT_COLOR);
         cb.setFont(new Font("SansSerif", Font.PLAIN, 13));
         cb.setIconTextGap(10);
+        
+        cb.addItemListener(e -> autoGenerate());
         return cb;
+    }
+    
+    private void autoGenerate() {
+        if (isOptionValid()) {
+            parent.generatePassword(getConfiguration());
+        }
+    }
+
+    public PasswordConfig getConfiguration() {
+        PasswordConfig config = new PasswordConfig();
+        config.setLength(slider.getValue());
+        config.setIncludesLower(lowerCaseCheckBox.isSelected());
+        config.setIncludesUpper(upperCaseCheckBox.isSelected());
+        config.setIncludesNumbers(numberCheckBox.isSelected());
+        config.setIncludesSymbols(symbolsCheckBox.isSelected());
+        return config;
+    }
+
+    public boolean isOptionValid() {
+        return lowerCaseCheckBox.isSelected() || upperCaseCheckBox.isSelected() || numberCheckBox.isSelected() || symbolsCheckBox.isSelected();
     }
 
 }

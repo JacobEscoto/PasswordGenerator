@@ -8,13 +8,7 @@ public class PasswordConfig {
     private boolean includesNumbers;
     private boolean includesSymbols;
 
-    public PasswordConfig() {
-        this.length = 8;
-        this.includesUpper = true;
-        this.includesLower = true;
-        this.includesNumbers = true;
-        this.includesSymbols = true;
-    }
+    public PasswordConfig() {}
 
     public PasswordConfig(int length, boolean includesUpper, boolean includesLower, boolean includesNumbers, boolean includesSymbols) {
         this.length = length;
