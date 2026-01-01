@@ -17,7 +17,6 @@ public class Slider extends JSlider {
     public Slider(int min, int max, int currentValue) {
         super(min, max, currentValue);
         setOrientation(HORIZONTAL);
-        setFocusable(false);
         initStyle();
     }
 
@@ -52,6 +51,11 @@ public class Slider extends JSlider {
             @Override
             protected Dimension getThumbSize() {
                 return new Dimension(16, 16);
+            }
+            
+            @Override
+            public void paintFocus(Graphics g) {
+                
             }
         });
     }
