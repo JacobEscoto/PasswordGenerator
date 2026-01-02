@@ -5,6 +5,7 @@ import java.awt.Color;
 import javax.swing.JFrame;
 import logic.PasswordGenerator;
 import logic.StrengthAnalyzer;
+import logic.StrengthAnalyzer.StrengthResult;
 import model.PasswordConfig;
 
 public class MainFrame extends JFrame {
@@ -51,6 +52,10 @@ public class MainFrame extends JFrame {
         this.configuration = config;
         String password = generator.generatePassword(configuration);
         displayPanel.setPasswordField(password);
+        
+        StrengthResult result = analyzer.checkPasswordStrength(password);
+        displayPanel.setLevel(result.getLevel());
+        displayPanel.animateProgress(result.getScore());
     }
 
 }

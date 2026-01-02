@@ -1,6 +1,7 @@
 package gui;
 
 import gui.components.Button;
+import gui.components.ProgressBar;
 import gui.components.TextField;
 import gui.utils.Toast;
 import java.awt.Color;
@@ -16,6 +17,8 @@ import java.awt.datatransfer.StringSelection;
 import javax.swing.Icon;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
+import javax.swing.Timer;
+import logic.StrengthAnalyzer.StrengthLevel;
 import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
 import org.kordamp.ikonli.swing.FontIcon;
 
@@ -30,6 +33,11 @@ public class DisplayPanel extends JPanel {
     private final JPanel buttonsPanel;
     private final MainFrame parent;
 
+    private final ProgressBar progressBar;
+    private StrengthLevel level;
+    private Timer progressTimer;
+    private Color barColor;
+
     public DisplayPanel(MainFrame parent) {
         this.parent = parent;
         setOpaque(false);
@@ -40,7 +48,7 @@ public class DisplayPanel extends JPanel {
         passwordField = new TextField();
         passwordField.setEditable(false);
         passwordField.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        passwordField.setForeground(new Color(30,30,30));
+        passwordField.setForeground(new Color(30, 30, 30));
         passwordField.setBackground(Color.WHITE);
         passwordField.setOpaque(true);
         passwordField.setHorizontalAlignment(SwingConstants.LEFT);
@@ -83,6 +91,19 @@ public class DisplayPanel extends JPanel {
         c.anchor = GridBagConstraints.EAST;
         add(buttonsPanel, c);
 
+        progressBar = new ProgressBar();
+        progressBar.setValue(0);
+        progressBar.setPreferredSize(new Dimension(100, 3));
+        progressBar.setOpaque(false);
+
+        c.gridx = 0;
+        c.gridy = 1;
+        c.gridwidth = 1;
+        c.weightx = 1.0;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.insets = new Insets(6, 0, 0, GAP);
+        add(progressBar, c);
+
         setListeners();
     }
 
@@ -107,10 +128,88 @@ public class DisplayPanel extends JPanel {
         });
     }
 
+    public void animateProgress(int targetValue) {
+        if (barColor == null) {
+            barColor = new Color(76, 175, 80);
+        }
+        if (progressTimer != null && progressTimer.isRunning()) {
+            progressTimer.stop();
+        }
+        progressBar.setValue(0);
+        updateProgressBar(targetValue, barColor);
+    }
+
+    public void animateProgress(int targetValue, Color color) {
+        barColor = color;
+        animateProgress(targetValue);
+    }
+
+    private void updateProgressBar(int targetValue, Color color) {
+        progressBar.setForeground(color);
+
+        if (progressTimer != null && progressTimer.isRunning()) {
+            progressTimer.stop();
+        }
+
+        int duration = 1000;
+        int delay = 15;
+        int steps = duration / delay;
+
+        int start = progressBar.getValue();
+        int delta = targetValue - start;
+
+        if (delta == 0) {
+            return;
+        }
+
+        int tempStep = delta / steps;
+        if (tempStep == 0) {
+            tempStep = delta > 0 ? 1 : -1;
+        }
+        final int step = tempStep;
+
+        progressTimer = new Timer(delay, e -> {
+            int current = progressBar.getValue();
+
+            if ((step > 0 && current >= targetValue)
+                    || (step < 0 && current <= targetValue)) {
+
+                progressBar.setValue(targetValue);
+                progressTimer.stop();
+                return;
+            }
+
+            progressBar.setValue(current + step);
+        });
+
+        progressTimer.start();
+    }
+
     public void setPasswordField(String password) {
         passwordField.setText(password);
         passwordField.setCaretPosition(0);
         passwordField.repaint();
+    }
+
+    public void setLevel(StrengthLevel level) {
+        this.level = level;
+        if (level == null) {
+            barColor = new Color(120, 120, 120);
+            return;
+        }
+        barColor = null;
+        switch (level) {
+            case WEAK ->
+                barColor = new Color(244, 67, 54);
+            case MEDIUM ->
+                barColor = new Color(255, 193, 7);
+            case STRONG ->
+                barColor = new Color(76, 175, 80);
+            case VERY_STRONG ->
+                barColor = new Color(33, 150, 243);
+            default ->
+                barColor = new Color(120, 120, 120);
+        }
     }
 
     public void setFixedWidth(int totalWidth) {
@@ -119,12 +218,13 @@ public class DisplayPanel extends JPanel {
 
         passwordField.setPreferredSize(new Dimension(usable, HEIGHT));
         passwordField.setMaximumSize(new Dimension(usable, HEIGHT));
-
         buttonsPanel.setPreferredSize(new Dimension(buttonsW, HEIGHT));
         buttonsPanel.setMaximumSize(new Dimension(buttonsW, HEIGHT));
 
-        setPreferredSize(new Dimension(totalWidth, HEIGHT + 12));
-        setMaximumSize(new Dimension(totalWidth, HEIGHT + 12));
+        int progressHeight = progressBar.getPreferredSize().height;
+        int totalHeight = HEIGHT + 6 + progressHeight;
+        setPreferredSize(new Dimension(totalWidth, totalHeight));
+        setMaximumSize(new Dimension(totalWidth, totalHeight));
 
         revalidate();
         repaint();

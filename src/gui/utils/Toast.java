@@ -12,7 +12,6 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JWindow;
 import javax.swing.Timer;
-import javax.swing.UIManager;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
@@ -74,7 +73,6 @@ public class Toast extends JWindow {
         int x = loc.x + (owner.getWidth() - getWidth()) / 2;
         int yBase = loc.y + (owner.getHeight() - getHeight()) - 60;
 
-        // Apilar toasts
         for (Toast t : activeToasts) {
             yBase -= (t.getHeight() + GAP);
         }
