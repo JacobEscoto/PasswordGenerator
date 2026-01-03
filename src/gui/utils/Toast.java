@@ -2,6 +2,7 @@ package gui.utils;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Point;
 import java.awt.Window;
@@ -22,82 +23,127 @@ import org.kordamp.ikonli.swing.FontIcon;
 public class Toast extends JWindow {
 
     public enum Type {
-        SUCCESS(new Color(76, 175, 80), FontAwesomeSolid.CHECK_CIRCLE),
-        ERROR(new Color(244, 67, 54), FontAwesomeSolid.EXCLAMATION_CIRCLE),
-        INFO(new Color(33, 150, 243), FontAwesomeSolid.INFO_CIRCLE);
+        SUCCESS(BlueSpaceColors.GREEN, FontAwesomeSolid.CHECK_CIRCLE),
+        ERROR(BlueSpaceColors.RED, FontAwesomeSolid.EXCLAMATION_CIRCLE),
+        INFO(BlueSpaceColors.BLUE_ACCENT, FontAwesomeSolid.INFO_CIRCLE);
 
-        final Color color;
-        final Ikon icon;
+        public final Color color;
+        public final Ikon icon;
 
         Type(Color color, Ikon icon) {
             this.color = color;
             this.icon = icon;
         }
     }
-    
+
+    public enum Position {
+        BOTTOM_CENTER,
+        TOP_CENTER,
+        TOP_RIGHT,
+        BOTTOM_RIGHT
+    }
+
     private static final List<Toast> activeToasts = new ArrayList();
-    private static final int WIDTH = 300;
-    private static final int HEIGHT = 60;
+
+    private static final int WIDTH = 320;
     private static final int GAP = 10;
-    private static final int FADE_INTERVAL = 30;
+
+    private static final int FADE_INTERVAL = 15;
     private static final int DISPLAY_TIME = 2500;
-    
-    public Toast(Window owner, String message, Type type) {
+    private static final int ARC = 14;
+
+    private final Type type;
+    private final Position position;
+
+    private Toast(Window owner, String message, Type type, Position position) {
         super(owner);
-        initUI(message, type);
+        this.type = type;
+        this.position = position;
+        initUI(message);
         pack();
-        setShape(new RoundRectangle2D.Double(0, 0, getWidth(), getHeight(), 15, 15));
-        setLocationRelativeToOwner(owner);
+        setShape(new RoundRectangle2D.Double(0, 0, getWidth(), getHeight(), ARC, ARC));
+        placeAndStack();
         fadeIn();
     }
-    
-    private void initUI(String message, Type type) {
-        JPanel panel = new JPanel(new BorderLayout(15, 0));
+
+    private void initUI(String message) {
+        JPanel panel = new JPanel(new BorderLayout(12, 0));
         panel.setBackground(BlueSpaceColors.BG_CARD);
-        Color borderColor = new Color(0, 0, 0, 0);
-        panel.setBorder(new CompoundBorder(new LineBorder(borderColor, 1, true),
-                                           new EmptyBorder(12, 16, 12, 16)));
+        panel.setBorder(new CompoundBorder(new LineBorder(BlueSpaceColors.BORDER, 1, true),
+                new EmptyBorder(10, 12, 10, 12)));
+        panel.setPreferredSize(new Dimension(WIDTH, 56));
 
         JLabel iconLabel = new JLabel(FontIcon.of(type.icon, 18, type.color));
-        JLabel textLabel = new JLabel("<html><body style='width: " + (WIDTH - 60) + "px;'>" + message + "</body></html>");
-        textLabel.setForeground(BlueSpaceColors.TEXT_MAIN);
-        textLabel.setFont(new Font("SansSerif", Font.BOLD, 13));
-
         panel.add(iconLabel, BorderLayout.WEST);
+
+        JLabel textLabel = new JLabel("<html><body style='width: " + (WIDTH - 96) + "px;'>" + message + "</body></html>");
+        textLabel.setForeground(BlueSpaceColors.TEXT_MAIN);
+        textLabel.setFont(new Font("SansSerif", Font.PLAIN, 13));
         panel.add(textLabel, BorderLayout.CENTER);
+
         add(panel);
     }
 
-    private void setLocationRelativeToOwner(Window owner) {
+    private void placeAndStack() {
+        Window owner = getOwner();
         Point loc = owner.getLocationOnScreen();
-        int x = loc.x + (owner.getWidth() - getWidth()) / 2;
-        int yBase = loc.y + (owner.getHeight() - getHeight()) - 60;
+        int ownerW = owner.getWidth();
+        int ownerH = owner.getHeight();
 
-        for (Toast t : activeToasts) {
-            yBase -= (t.getHeight() + GAP);
+        synchronized (activeToasts) {
+            activeToasts.add(this);
         }
-        setLocation(x, yBase);
-        activeToasts.add(this);
+        int index;
+        synchronized (activeToasts) {
+            index = activeToasts.indexOf(this);
+        }
+
+        int x = 0, y = 0;
+        int toastW = getPreferredSize().width;
+        int toastH = getPreferredSize().height;
+
+        int margin = 20;
+
+        switch (position) {
+            case TOP_RIGHT -> {
+                x = loc.x + ownerW - toastW - margin;
+                y = loc.y + margin + index * (toastH + GAP);
+            }
+            case TOP_CENTER -> {
+                x = loc.x + (ownerW - toastW) / 2;
+                y = loc.y + margin + index * (toastH + GAP);
+            }
+            case BOTTOM_RIGHT -> {
+                x = loc.x + ownerW - toastW - margin;
+                y = loc.y + ownerH - toastH - margin - index * (toastH + GAP);
+            }
+            case BOTTOM_CENTER -> {
+                x = loc.x + (ownerW - toastW) / 2;
+                y = loc.y + ownerH - toastH - margin - index * (toastH + GAP);
+            }
+        }
+
+        setLocation(x, y);
     }
-    
+
     private void fadeIn() {
         setOpacity(0f);
         setVisible(true);
-        Timer timer = new Timer(FADE_INTERVAL, null);
-        timer.addActionListener(e -> {
-            float opacity = getOpacity();
-            opacity += 0.1f;
-            if (opacity >= 1f) {
+
+        Timer fadeIn = new Timer(FADE_INTERVAL, null);
+        fadeIn.addActionListener(e -> {
+            float op = getOpacity() + 0.08f;
+            if (op >= 1f) {
                 setOpacity(1f);
                 ((Timer) e.getSource()).stop();
                 stayVisible();
             } else {
-                setOpacity(opacity);
+                setOpacity(op);
             }
         });
-        timer.start();
+        fadeIn.start();
     }
-    
+
     private void stayVisible() {
         Timer stay = new Timer(DISPLAY_TIME, e -> fadeOut());
         stay.setRepeats(false);
@@ -105,38 +151,98 @@ public class Toast extends JWindow {
     }
 
     private void fadeOut() {
-        Timer timer = new Timer(FADE_INTERVAL, null);
-        timer.addActionListener(e -> {
-            float opacity = getOpacity();
-            opacity -= 0.1f;
-            if (opacity <= 0f) {
+        Timer fadeOut = new Timer(FADE_INTERVAL, null);
+        fadeOut.addActionListener(e -> {
+            float op = getOpacity() - 0.07f;
+            if (op <= 0f) {
                 setOpacity(0f);
                 ((Timer) e.getSource()).stop();
-                dispose();
-                activeToasts.remove(this);
+                closeAndReposition();
             } else {
-                setOpacity(opacity);
+                setOpacity(op);
             }
         });
-        timer.start();
+        fadeOut.start();
+    }
+
+    private void closeAndReposition() {
+        synchronized (activeToasts) {
+            activeToasts.remove(this);
+        }
+        dispose();
+
+        synchronized (activeToasts) {
+            for (int i = 0; i < activeToasts.size(); i++) {
+                Toast t = activeToasts.get(i);
+                t.repositionByIndex(i);
+            }
+        }
+    }
+
+    private void repositionByIndex(int index) {
+        Window owner = getOwner();
+        Point loc = owner.getLocationOnScreen();
+        int ownerW = owner.getWidth();
+        int ownerH = owner.getHeight();
+
+        int toastW = getPreferredSize().width;
+        int toastH = getPreferredSize().height;
+        int margin = 20;
+
+        int x = 0, y = 0;
+        switch (position) {
+            case TOP_RIGHT -> {
+                x = loc.x + ownerW - toastW - margin;
+                y = loc.y + margin + index * (toastH + GAP);
+            }
+            case TOP_CENTER -> {
+                x = loc.x + (ownerW - toastW) / 2;
+                y = loc.y + margin + index * (toastH + GAP);
+            }
+            case BOTTOM_RIGHT -> {
+                x = loc.x + ownerW - toastW - margin;
+                y = loc.y + ownerH - toastH - margin - index * (toastH + GAP);
+            }
+            case BOTTOM_CENTER -> {
+                x = loc.x + (ownerW - toastW) / 2;
+                y = loc.y + ownerH - toastH - margin - index * (toastH + GAP);
+            }
+        }
+        setLocation(x, y);
     }
 
     public static void show(Window owner, String message, Type type) {
+        show(owner, message, type, Position.BOTTOM_CENTER);
+    }
+    
+    public static void show(Window owner, String message, Type type, Position pos) {
         if (owner == null || !owner.isShowing()) {
             return;
         }
-        new Toast(owner, message, type);
+        new Toast(owner, message, type, pos);
     }
 
     public static void showInfo(Window owner, String message) {
         show(owner, message, Type.INFO);
     }
 
+    public static void showInfo(Window owner, String message, Position pos) {
+        show(owner, message, Type.INFO, pos);
+    }
+
     public static void showError(Window owner, String message) {
         show(owner, message, Type.ERROR);
     }
 
+    public static void showError(Window owner, String message, Position pos) {
+        show(owner, message, Type.ERROR, pos);
+    }
+
     public static void showSuccess(Window owner, String message) {
         show(owner, message, Type.SUCCESS);
+    }
+
+    public static void showSuccess(Window owner, String message, Position pos) {
+        show(owner, message, Type.SUCCESS, pos);
     }
 }

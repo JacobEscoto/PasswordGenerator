@@ -6,6 +6,7 @@ import gui.components.TextField;
 import gui.utils.BlueSpaceColors;
 import gui.utils.HoverTip;
 import gui.utils.Toast;
+import gui.utils.Toast.Position;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
@@ -107,7 +108,7 @@ public class DisplayPanel extends JPanel {
 
         progressBar = new ProgressBar();
         progressBar.setValue(0);
-        progressBar.setPreferredSize(new Dimension(100, 3));
+        progressBar.setPreferredSize(new Dimension(90, 5));
         progressBar.setOpaque(false);
 
         c.gridx = 0;
@@ -154,13 +155,13 @@ public class DisplayPanel extends JPanel {
         copyBtn.addActionListener(e -> {
             String text = passwordField.getText();
             if (text == null || text.trim().isEmpty()) {
-                Toast.showInfo(parent, "Nothing to copy in clipboard");
+                Toast.showInfo(parent, "Nothing to copy in clipboard", Position.BOTTOM_RIGHT);
                 return;
             }
             StringSelection selection = new StringSelection(text);
             Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
             clipboard.setContents(selection, selection);
-            Toast.showSuccess(parent, "Password copied to clipboard");
+            Toast.showSuccess(parent, "Password copied to clipboard", Position.BOTTOM_RIGHT);
         });
         copyBtn.addMouseListener(new MouseAdapter() {
 
@@ -249,7 +250,27 @@ public class DisplayPanel extends JPanel {
 
     public void setLevel(StrengthLevel level) {
         this.level = level;
-        progressBar.setToolTipText("Password Strength : " + level.getDescription());
+        progressBar.addMouseListener(new MouseAdapter() {
+
+            private HoverTip tip;
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                Window win = SwingUtilities.getWindowAncestor(copyBtn);
+                tip = new HoverTip(win, "<html><p>Password Strength: <b>" + level.getDescription() + "</b></p></html>");
+
+                Point p = e.getLocationOnScreen();
+                tip.showAt(new Point(p.x, p.y + 24));
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                if (tip != null) {
+                    tip.hideTip();
+                }
+            }
+        });
+        
         if (level == null) {
             barColor = new Color(120, 120, 120);
             return;

@@ -2,41 +2,46 @@ package gui;
 
 import gui.utils.BlueSpaceColors;
 import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
 import java.awt.Dimension;
 import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
 import javax.swing.JPanel;
 
 public class MainPanel extends JPanel {
 
     private static final int CONTENT_WIDTH = 520;
+    private static final int HISTORY_WIDTH = 360;
 
-    public MainPanel(DisplayPanel displayPanel, ConfigPanel configPanel) {
+    public MainPanel(DisplayPanel displayPanel, ConfigPanel configPanel, HistoryPanel historyPanel) {
 
-        setLayout(new BorderLayout());
+        setLayout(new BorderLayout(16, 16));
         setBackground(BlueSpaceColors.BG_MAIN);
         setOpaque(true);
 
-        setMinimumSize(new Dimension(520, 300));
-        setPreferredSize(new Dimension(520, 400));
+        setBorder(BorderFactory.createEmptyBorder(16, 16, 16, 16));
 
-        JPanel column = new JPanel();
-        column.setLayout(new BoxLayout(column, BoxLayout.Y_AXIS));
-        column.setOpaque(false);
+        JPanel centerColumn = new JPanel(new BorderLayout(0, 16));
+        centerColumn.setOpaque(false);
+        centerColumn.setPreferredSize(new Dimension(CONTENT_WIDTH, 0));
 
-        column.setAlignmentX(Component.CENTER_ALIGNMENT);
+        centerColumn.add(wrapCard(displayPanel), BorderLayout.NORTH);
+        centerColumn.add(wrapCard(configPanel), BorderLayout.CENTER);
 
-        displayPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        configPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        JPanel historyWrapper = historyPanel;
+        historyWrapper.setPreferredSize(new Dimension(HISTORY_WIDTH, 0));
 
-        column.add(displayPanel);
-        column.add(Box.createVerticalStrut(0));
-        column.add(configPanel);
+        add(centerColumn, BorderLayout.CENTER);
+        add(historyWrapper, BorderLayout.EAST);
+    }
 
-        add(column, BorderLayout.CENTER);
-        setBorder(BorderFactory.createEmptyBorder(18, 18, 18, 18));
+    private JPanel wrapCard(JPanel panel) {
+        JPanel card = new JPanel(new BorderLayout());
+        card.setOpaque(true);
+        card.setBackground(BlueSpaceColors.BG_CARD);
+        card.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(BlueSpaceColors.BORDER),
+                BorderFactory.createEmptyBorder(12, 12, 12, 12)
+        ));
+        card.add(panel, BorderLayout.CENTER);
+        return card;
     }
 }

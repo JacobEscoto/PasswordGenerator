@@ -1,8 +1,10 @@
 package gui;
 
 import gui.components.Button;
+import gui.utils.BlueSpaceColors;
 import gui.utils.HoverTip;
 import gui.utils.Toast;
+import gui.utils.Toast.Position;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Cursor;
@@ -24,7 +26,6 @@ import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import model.Password;
 import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
@@ -32,136 +33,147 @@ import org.kordamp.ikonli.swing.FontIcon;
 
 public class HistoryPanel extends JPanel {
 
-    private final JPanel listContainer;
-    private final Button clearBtn;
+    private static final int PANEL_WIDTH = 360;
+    private static final int MAX_PWD_CHARS = 28;
+
+    private final JPanel listPanel;
+    private final JScrollPane scrollPane;
     private final MainFrame parent;
 
     public HistoryPanel(MainFrame parent) {
         this.parent = parent;
+
         setLayout(new BorderLayout());
+        setBackground(BlueSpaceColors.BG_MAIN);
         setOpaque(true);
-        setBackground(gui.utils.BlueSpaceColors.BG_MAIN);
-        setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
 
-        // === HEADER ===
-        JPanel header = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
-        header.setOpaque(false);
-        JLabel title = new JLabel("History");
-        title.setFont(new Font("SansSerif", Font.BOLD, 16));
-        title.setForeground(gui.utils.BlueSpaceColors.TEXT_MAIN);
-        title.setHorizontalAlignment(SwingConstants.LEFT);
+        Dimension fixed = new Dimension(PANEL_WIDTH, 0);
+        setPreferredSize(fixed);
+        setMinimumSize(fixed);
+        setMaximumSize(new Dimension(PANEL_WIDTH, Integer.MAX_VALUE));
 
-        clearBtn = new Button(10, FontIcon.of(FontAwesomeSolid.TRASH_ALT, 16, gui.utils.BlueSpaceColors.RED));
-        clearBtn.setBackground(new Color(0, 0, 0, 0));
-        clearBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        clearBtn.addActionListener(e -> {
-            parent.getHistoryManager().clearHistory();
-            refresh(parent.getHistoryManager().getHistory());
-        });
+        listPanel = new JPanel();
+        listPanel.setLayout(new BoxLayout(listPanel, BoxLayout.Y_AXIS));
+        listPanel.setOpaque(false);
 
-        clearBtn.addMouseListener(new MouseAdapter() {
-            private HoverTip tip;
-            @Override
-            public void mouseEntered(MouseEvent e) {
-                Window win = SwingUtilities.getWindowAncestor(clearBtn);
-                tip = new HoverTip(win, "Clear history");
-                Point p = e.getLocationOnScreen();
-                tip.showAt(new Point(p.x, p.y + 24));
-            }
-            @Override
-            public void mouseExited(MouseEvent e) {
-                if (tip != null) tip.hideTip();
-            }
-        });
+        scrollPane = new JScrollPane(listPanel);
+        scrollPane.setBorder(null);
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(14);
+        scrollPane.getViewport().setOpaque(false);
+        scrollPane.setOpaque(false);
 
-        header.add(title);
-        header.add(Box.createHorizontalGlue());
-        header.add(clearBtn);
-        add(header, BorderLayout.NORTH);
-
-        // === LIST CONTAINER ===
-        listContainer = new JPanel();
-        listContainer.setLayout(new BoxLayout(listContainer, BoxLayout.Y_AXIS));
-        listContainer.setOpaque(false);
-
-        JScrollPane scroll = new JScrollPane(listContainer);
-        scroll.setPreferredSize(new Dimension(320, 300));
-        scroll.setBorder(BorderFactory.createEmptyBorder());
-        scroll.setOpaque(false);
-        scroll.getViewport().setOpaque(false);
-        scroll.getViewport().setBackground(gui.utils.BlueSpaceColors.BG_MAIN);
-
-        add(scroll, BorderLayout.CENTER);
+        add(scrollPane, BorderLayout.CENTER);
     }
 
     public void refresh(List<Password> history) {
-        listContainer.removeAll();
+        listPanel.removeAll();
+
         if (history == null || history.isEmpty()) {
             JLabel empty = new JLabel("No passwords yet");
-            empty.setForeground(gui.utils.BlueSpaceColors.TEXT_MUTED);
-            empty.setBorder(BorderFactory.createEmptyBorder(12, 6, 12, 6));
-            listContainer.add(empty);
+            empty.setForeground(BlueSpaceColors.TEXT_MUTED);
+            empty.setBorder(BorderFactory.createEmptyBorder(16, 8, 16, 8));
+            listPanel.add(empty);
         } else {
             for (int i = history.size() - 1; i >= 0; i--) {
-                Password p = history.get(i);
-                listContainer.add(createRow(p));
-                listContainer.add(Box.createVerticalStrut(8));
+                listPanel.add(createCard(history.get(i)));
+                listPanel.add(Box.createVerticalStrut(10));
             }
         }
-        listContainer.revalidate();
-        listContainer.repaint();
+
+        listPanel.revalidate();
+        listPanel.repaint();
     }
 
-    private JPanel createRow(Password p) {
-        JPanel row = new JPanel(new BorderLayout(8, 0));
-        row.setOpaque(true);
-        row.setBackground(gui.utils.BlueSpaceColors.BG_CARD);
-        row.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(gui.utils.BlueSpaceColors.BORDER),
-                BorderFactory.createEmptyBorder(6, 8, 6, 8)
+    private JPanel createCard(Password p) {
+        JPanel card = new JPanel(new BorderLayout(10, 0));
+        card.setOpaque(true);
+        card.setBackground(BlueSpaceColors.BG_CARD);
+        card.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(BlueSpaceColors.BORDER),
+                BorderFactory.createEmptyBorder(8, 10, 8, 10)
         ));
 
-        // --- Info Labels ---
+        card.setMaximumSize(new Dimension(Integer.MAX_VALUE, 56));
+
         JPanel info = new JPanel(new GridLayout(2, 1));
         info.setOpaque(false);
-        JLabel pwdLabel = new JLabel(p.getPassword());
-        pwdLabel.setFont(pwdLabel.getFont().deriveFont(13f));
-        pwdLabel.setForeground(gui.utils.BlueSpaceColors.TEXT_MAIN);
-        JLabel dateLabel = new JLabel(p.getDateCreated() + " • " + p.getStrengthLevel());
-        dateLabel.setFont(dateLabel.getFont().deriveFont(11f));
-        dateLabel.setForeground(gui.utils.BlueSpaceColors.TEXT_MUTED);
-        info.add(pwdLabel);
-        info.add(dateLabel);
 
-        // --- Actions ---
+        String fullPwd = p.getPassword();
+        String shortPwd = shorten(fullPwd, MAX_PWD_CHARS);
+
+        JLabel pwdLabel = new JLabel(shortPwd);
+        pwdLabel.setFont(new Font("SansSerif", Font.BOLD, 13));
+        pwdLabel.setForeground(BlueSpaceColors.TEXT_MAIN);
+        pwdLabel.setToolTipText(fullPwd);
+
+        JLabel meta = new JLabel(p.getDateCreated() + " • " + p.getStrengthLevel());
+        meta.setFont(new Font("SansSerif", Font.PLAIN, 11));
+        meta.setForeground(BlueSpaceColors.TEXT_MUTED);
+
+        info.add(pwdLabel);
+        info.add(meta);
+
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
         actions.setOpaque(false);
-        Button copy = new Button(10, FontIcon.of(FontAwesomeSolid.COPY, 16, gui.utils.BlueSpaceColors.TEXT_MAIN));
-        copy.setBackground(new Color(0, 0, 0, 0));
+
+        Button copy = new Button(
+                10,
+                FontIcon.of(FontAwesomeSolid.COPY, 16, BlueSpaceColors.TEXT_MAIN)
+        );
         copy.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        copy.setBackground(new Color(0, 0, 0, 0));
+
         copy.addActionListener((ActionEvent e) -> {
-            Toolkit.getDefaultToolkit().getSystemClipboard()
-                    .setContents(new StringSelection(p.getPassword()), null);
-            Toast.showSuccess(parent, "Password copied to clipboard");
+            Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(fullPwd), null);
+            Toast.showSuccess(parent, "Password copied to clipboard", Position.BOTTOM_RIGHT);
         });
-        actions.add(copy);
 
-        row.add(info, BorderLayout.CENTER);
-        row.add(actions, BorderLayout.EAST);
+        copy.addMouseListener(new MouseAdapter() {
 
-        // --- Hover effect ---
-        row.addMouseListener(new java.awt.event.MouseAdapter() {
+            private HoverTip tip;
+
             @Override
             public void mouseEntered(MouseEvent e) {
-                row.setBackground(gui.utils.BlueSpaceColors.BG_HOVER);
+                Window win = SwingUtilities.getWindowAncestor(copy);
+                tip = new HoverTip(win, "Copy password");
+
+                Point p = e.getLocationOnScreen();
+                tip.showAt(new Point(p.x, p.y + 24));
             }
+
             @Override
             public void mouseExited(MouseEvent e) {
-                row.setBackground(gui.utils.BlueSpaceColors.BG_CARD);
+                if (tip != null) {
+                    tip.hideTip();
+                }
             }
         });
 
-        row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 48));
-        return row;
+        actions.add(copy);
+
+        card.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                card.setBackground(BlueSpaceColors.BG_HOVER);
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                card.setBackground(BlueSpaceColors.BG_CARD);
+            }
+        });
+
+        card.add(info, BorderLayout.CENTER);
+        card.add(actions, BorderLayout.EAST);
+
+        return card;
+    }
+
+    private String shorten(String text, int max) {
+        if (text == null || text.length() <= max) {
+            return text;
+        }
+        return text.substring(0, max - 1) + "…";
     }
 }

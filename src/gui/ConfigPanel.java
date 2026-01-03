@@ -21,10 +21,14 @@ public class ConfigPanel extends JPanel {
 
     private final Slider slider;
     private final JLabel lengthLabel;
+
     private final JCheckBox lowerCase;
     private final JCheckBox upperCase;
     private final JCheckBox numbers;
     private final JCheckBox symbols;
+
+    private JCheckBox[] allChecks;
+
     private final MainFrame parent;
 
     public ConfigPanel(MainFrame parent) {
@@ -41,7 +45,7 @@ public class ConfigPanel extends JPanel {
         lengthLabel.setPreferredSize(new Dimension(36, ROW_HEIGHT));
 
         slider = new Slider(1, 50, 10);
-        slider.setPreferredSize(new Dimension(200, ROW_HEIGHT));
+        slider.setPreferredSize(new Dimension(180, ROW_HEIGHT));
         slider.addChangeListener(e -> {
             lengthLabel.setText(String.valueOf(slider.getValue()));
             if (!slider.getValueIsAdjusting()) {
@@ -67,6 +71,8 @@ public class ConfigPanel extends JPanel {
         symbols = createCheckBox("Symbols");
         lowerCase.setSelected(true);
 
+        allChecks = new JCheckBox[]{lowerCase, upperCase, numbers, symbols};
+
         JPanel ckPanel = new JPanel();
         ckPanel.setOpaque(false);
         ckPanel.add(lowerCase);
@@ -80,11 +86,35 @@ public class ConfigPanel extends JPanel {
         c.weightx = 1.0;
         c.insets = new Insets(6, 0, 0, 0);
         add(ckPanel, c);
+
+        updateCheckStates();
     }
 
     private void autoGenerate() {
-        if (lowerCase.isSelected() || upperCase.isSelected() || numbers.isSelected() || symbols.isSelected()) {
-            parent.generatePassword(getConfiguration());
+        parent.generatePassword(getConfiguration());
+    }
+
+    private int getSelectedCount() {
+        int count = 0;
+        for (JCheckBox cb : allChecks) {
+            if (cb.isSelected()) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    private void updateCheckStates() {
+        int selected = getSelectedCount();
+
+        for (JCheckBox cb : allChecks) {
+            if (selected == 1 && cb.isSelected()) {
+                cb.setEnabled(false);
+                cb.setToolTipText("At least one option must remain enabled");
+            } else {
+                cb.setEnabled(true);
+                cb.setToolTipText(null);
+            }
         }
     }
 
@@ -93,11 +123,17 @@ public class ConfigPanel extends JPanel {
         cb.setIcon(new ColorTickIcon(Color.decode("#2196F3"), 16, 5));
         cb.setSelectedIcon(new ColorTickIcon(Color.decode("#2196F3"), 16, 5));
         cb.setFont(new Font("SansSerif", Font.PLAIN, 13));
-        cb.addActionListener(e -> autoGenerate());
+
         cb.setFocusPainted(false);
         cb.setContentAreaFilled(false);
         cb.setBorderPainted(false);
         cb.setOpaque(false);
+
+        cb.addActionListener(e -> {
+            updateCheckStates();
+            autoGenerate();
+        });
+
         return cb;
     }
 
