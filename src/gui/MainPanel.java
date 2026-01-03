@@ -1,10 +1,10 @@
 package gui;
 
+import gui.utils.BlueSpaceColors;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.GridBagLayout;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -12,39 +12,31 @@ import javax.swing.JPanel;
 
 public class MainPanel extends JPanel {
 
-    public MainPanel(DisplayPanel displayPanel, ConfigPanel configPanel, int contentWidth) {
+    private static final int CONTENT_WIDTH = 520;
+
+    public MainPanel(DisplayPanel displayPanel, ConfigPanel configPanel) {
+
         setLayout(new BorderLayout());
+        setBackground(BlueSpaceColors.BG_MAIN);
         setOpaque(true);
-        setBackground(new Color(245, 246, 247));
 
-        JPanel center = new JPanel(new GridBagLayout());
-        center.setOpaque(false);
+        setMinimumSize(new Dimension(520, 300));
+        setPreferredSize(new Dimension(520, 400));
 
-        JPanel card = new JPanel();
-        card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
-        card.setOpaque(true);
-        card.setBackground(Color.WHITE);
-        card.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(220, 220, 220)),
-                BorderFactory.createEmptyBorder(18, 18, 18, 18)
-        ));
+        JPanel column = new JPanel();
+        column.setLayout(new BoxLayout(column, BoxLayout.Y_AXIS));
+        column.setOpaque(false);
 
-        card.add(displayPanel);
-        card.add(Box.createVerticalStrut(18));
-        card.add(configPanel);
+        column.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        displayPanel.setFixedWidth(contentWidth);
-        configPanel.setFixedWidth(contentWidth);
+        displayPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        configPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        int totalHeight = displayPanel.getPreferredSize().height + 18 + configPanel.getPreferredSize().height;
-        card.setPreferredSize(new Dimension(contentWidth, totalHeight));
-        card.setMaximumSize(new Dimension(contentWidth, Integer.MAX_VALUE));
-        card.setAlignmentX(Component.CENTER_ALIGNMENT);
+        column.add(displayPanel);
+        column.add(Box.createVerticalStrut(0));
+        column.add(configPanel);
 
-        center.add(card);
-        add(center, BorderLayout.CENTER);
-
-        // padding exterior opcional
+        add(column, BorderLayout.CENTER);
         setBorder(BorderFactory.createEmptyBorder(18, 18, 18, 18));
     }
 }

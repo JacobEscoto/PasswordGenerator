@@ -4,9 +4,9 @@ public class Password {
 
     private String password;
     private String dateCreated;
-    private int strengthLevel;
+    private String strengthLevel;
 
-    public Password(String password, String dateCreated, int strengthLevel) {
+    public Password(String password, String dateCreated, String strengthLevel) {
         this.password = password;
         this.dateCreated = dateCreated;
         this.strengthLevel = strengthLevel;
@@ -28,11 +28,11 @@ public class Password {
         this.dateCreated = dateCreated;
     }
 
-    public int getStrengthLevel() {
+    public String getStrengthLevel() {
         return strengthLevel;
     }
 
-    public void setStrengthLevel(int strengthLevel) {
+    public void setStrengthLevel(String strengthLevel) {
         this.strengthLevel = strengthLevel;
     }
 

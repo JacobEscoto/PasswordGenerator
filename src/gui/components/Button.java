@@ -5,8 +5,6 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.Shape;
-import java.awt.geom.Area;
-import java.awt.geom.Rectangle2D;
 import java.awt.geom.RoundRectangle2D;
 import javax.swing.Icon;
 import javax.swing.JButton;
@@ -23,13 +21,19 @@ public class Button extends JButton {
         setContentAreaFilled(false);
         setOpaque(false);
         setFocusable(false);
-
-        setBackground(new Color(230, 230, 230));
-        setForeground(Color.DARK_GRAY);
     }
 
     public Button(int radius) {
         this(radius, null);
+    }
+    
+    public Button(String label, Icon icon) {
+        this(0, icon);
+    }
+    
+    public Button(int radius, String label, Icon icon) {
+        this(radius, icon);
+        setText(label);
     }
 
     @Override
@@ -45,7 +49,7 @@ public class Button extends JButton {
         } else if (getModel().isPressed()) {
             bg = bg.darker();
         } else if (getModel().isRollover()) {
-            bg = Color.decode("#D9D9D9");
+            bg = bg.brighter();
         }
         g2.setColor(bg);
         g2.fillRoundRect(0, 0, width, height, radius, radius);

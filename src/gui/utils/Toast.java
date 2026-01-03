@@ -41,7 +41,7 @@ public class Toast extends JWindow {
     private static final int GAP = 10;
     private static final int FADE_INTERVAL = 30;
     private static final int DISPLAY_TIME = 2500;
-
+    
     public Toast(Window owner, String message, Type type) {
         super(owner);
         initUI(message, type);
@@ -53,14 +53,14 @@ public class Toast extends JWindow {
     
     private void initUI(String message, Type type) {
         JPanel panel = new JPanel(new BorderLayout(15, 0));
-        panel.setBackground(new Color(255, 255, 255, 240));
-        Color borderColor = new Color(219, 219, 219);
+        panel.setBackground(BlueSpaceColors.BG_CARD);
+        Color borderColor = new Color(0, 0, 0, 0);
         panel.setBorder(new CompoundBorder(new LineBorder(borderColor, 1, true),
                                            new EmptyBorder(12, 16, 12, 16)));
 
         JLabel iconLabel = new JLabel(FontIcon.of(type.icon, 18, type.color));
         JLabel textLabel = new JLabel("<html><body style='width: " + (WIDTH - 60) + "px;'>" + message + "</body></html>");
-        textLabel.setForeground(Color.BLACK);
+        textLabel.setForeground(BlueSpaceColors.TEXT_MAIN);
         textLabel.setFont(new Font("SansSerif", Font.BOLD, 13));
 
         panel.add(iconLabel, BorderLayout.WEST);

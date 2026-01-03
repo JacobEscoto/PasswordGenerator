@@ -3,6 +3,8 @@ package gui;
 import gui.components.Button;
 import gui.components.ProgressBar;
 import gui.components.TextField;
+import gui.utils.BlueSpaceColors;
+import gui.utils.HoverTip;
 import gui.utils.Toast;
 import java.awt.Color;
 import java.awt.Cursor;
@@ -11,12 +13,18 @@ import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.Point;
 import java.awt.Toolkit;
+import java.awt.Window;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import javax.swing.BorderFactory;
 import javax.swing.Icon;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import logic.StrengthAnalyzer.StrengthLevel;
 import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
@@ -49,7 +57,11 @@ public class DisplayPanel extends JPanel {
         passwordField.setEditable(false);
         passwordField.setFont(new Font("SansSerif", Font.PLAIN, 14));
         passwordField.setForeground(new Color(30, 30, 30));
-        passwordField.setBackground(Color.WHITE);
+        passwordField.setBackground(BlueSpaceColors.BG_CARD);
+        setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(0, 0, 0, 0)),
+                BorderFactory.createEmptyBorder(14, 16, 14, 16)
+        ));
         passwordField.setOpaque(true);
         passwordField.setHorizontalAlignment(SwingConstants.LEFT);
         passwordField.setPreferredSize(new Dimension(300, HEIGHT));
@@ -67,8 +79,10 @@ public class DisplayPanel extends JPanel {
         GridBagLayout bpLayout = new GridBagLayout();
         buttonsPanel.setLayout(bpLayout);
 
-        generateBtn = createButton(FontIcon.of(FontAwesomeSolid.REDO_ALT, 16, Color.DARK_GRAY));
-        copyBtn = createButton(FontIcon.of(FontAwesomeSolid.COPY, 16, Color.DARK_GRAY));
+        generateBtn = createButton(FontIcon.of(FontAwesomeSolid.REDO_ALT, 16, Color.WHITE));
+        generateBtn.setBackground(BlueSpaceColors.BG_CARD);
+        copyBtn = createButton(FontIcon.of(FontAwesomeSolid.COPY, 16, Color.WHITE));
+        copyBtn.setBackground(BlueSpaceColors.BG_CARD);
 
         generateBtn.setPreferredSize(new Dimension(BUTTON_SIZE, BUTTON_SIZE));
         copyBtn.setPreferredSize(new Dimension(BUTTON_SIZE, BUTTON_SIZE));
@@ -114,7 +128,29 @@ public class DisplayPanel extends JPanel {
     }
 
     private void setListeners() {
+
         generateBtn.addActionListener(e -> parent.generatePassword());
+        generateBtn.addMouseListener(new MouseAdapter() {
+
+            private HoverTip tip;
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                Window win = SwingUtilities.getWindowAncestor(generateBtn);
+                tip = new HoverTip(win, "Generate password");
+
+                Point p = e.getLocationOnScreen();
+                tip.showAt(new Point(p.x, p.y + 24));
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                if (tip != null) {
+                    tip.hideTip();
+                }
+            }
+
+        });
         copyBtn.addActionListener(e -> {
             String text = passwordField.getText();
             if (text == null || text.trim().isEmpty()) {
@@ -123,8 +159,28 @@ public class DisplayPanel extends JPanel {
             }
             StringSelection selection = new StringSelection(text);
             Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-            clipboard.setContents(selection, null);
+            clipboard.setContents(selection, selection);
             Toast.showSuccess(parent, "Password copied to clipboard");
+        });
+        copyBtn.addMouseListener(new MouseAdapter() {
+
+            private HoverTip tip;
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                Window win = SwingUtilities.getWindowAncestor(copyBtn);
+                tip = new HoverTip(win, "Copy password");
+
+                Point p = e.getLocationOnScreen();
+                tip.showAt(new Point(p.x, p.y + 24));
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                if (tip != null) {
+                    tip.hideTip();
+                }
+            }
         });
     }
 
@@ -193,6 +249,7 @@ public class DisplayPanel extends JPanel {
 
     public void setLevel(StrengthLevel level) {
         this.level = level;
+        progressBar.setToolTipText("Password Strength : " + level.getDescription());
         if (level == null) {
             barColor = new Color(120, 120, 120);
             return;
@@ -200,15 +257,13 @@ public class DisplayPanel extends JPanel {
         barColor = null;
         switch (level) {
             case WEAK ->
-                barColor = new Color(244, 67, 54);
+                barColor = BlueSpaceColors.RED;
             case MEDIUM ->
-                barColor = new Color(255, 193, 7);
+                barColor = BlueSpaceColors.ORANGE;
             case STRONG ->
-                barColor = new Color(76, 175, 80);
+                barColor = BlueSpaceColors.GREEN;
             case VERY_STRONG ->
-                barColor = new Color(33, 150, 243);
-            default ->
-                barColor = new Color(120, 120, 120);
+                barColor = BlueSpaceColors.BLUE_ACCENT;
         }
     }
 
